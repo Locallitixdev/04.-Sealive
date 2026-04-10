@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, Chakra_Petch, Geist_Mono } from "next/font/google";
-import Navbar from "@/components/layout/Navbar";
+import Sidebar from "@/components/layout/Sidebar";
 import "./globals.css";
 
 const inter = Inter({
@@ -35,9 +35,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${inter.variable} ${chakraPetch.variable} ${geistMono.variable} h-full`}>
-      <body className="min-h-full flex flex-col antialiased">
-        <Navbar />
-        <main className="flex-1 pt-[56px]">{children}</main>
+      <body className="min-h-full flex antialiased bg-[#0C0E14] text-white">
+        <Sidebar />
+        <main className="flex-1 ml-16 lg:ml-[72px] h-screen overflow-hidden transition-all duration-300">{children}</main>
       </body>
     </html>
   );

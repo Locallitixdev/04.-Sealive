@@ -1,348 +1,307 @@
 "use client";
 
-import { MOCK_SHIP_TYPES, DASHBOARD_STATS, MOCK_ALERTS, TIMELINE_EVENTS } from "@/lib/constants";
+import { MOCK_SHIP_TYPES, DASHBOARD_STATS, MOCK_ALERTS } from "@/lib/constants";
 import {
-  BarChart3,
-  Compass,
-  PieChart,
-  AlertTriangle,
-  Clock,
-  RotateCcw,
-  Calendar,
-  Download,
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  RadialBarChart,
+  RadialBar,
+  ScatterChart,
+  Scatter,
+  ZAxis,
+  CartesianGrid,
+  Legend,
+  ComposedChart,
+  Bar,
+  Line,
+  Cell
+} from 'recharts';
+import {
   Activity,
   Ship,
   Shield,
   AlertCircle,
   TrendingUp,
   TrendingDown,
+  Clock,
+  Radio,
+  MapPin,
+  AlertTriangle,
+  Zap,
+  Crosshair
 } from "lucide-react";
 
-const maxShipCount = Math.max(...MOCK_SHIP_TYPES.map((s) => s.count));
+// --- MOCK DATA TRANSFORMATIONS ---
 
-const MOCK_ANOMALIES = [
-  { type: "Black List", count: 477983, color: "bg-[#059669]" },
-  { type: "Drifting", count: 210731, color: "bg-[#E67E22]" },
-  { type: "Loitering", count: 103661, color: "bg-[#DC2626]" },
-  { type: "Teleporting", count: 98425, color: "bg-[#DC2626]" },
+// 1. AreaChart (Timeline Heartbeat)
+const MOCK_AREA_TIMELINE = Array.from({ length: 24 }).map((_, i) => ({
+  time: `${i.toString().padStart(2, '0')}:00`,
+  anomalies: Math.floor(Math.random() * 50) + (i > 10 && i < 15 ? 80 : 10), // Spike in middle
+  verifications: Math.floor(Math.random() * 30) + 20,
+}));
+
+// 2. RadialBar (Vessel Types)
+const MOCK_RADIAL_TYPES = MOCK_SHIP_TYPES.slice(0, 6).map((ship, index) => {
+  const colors = ["#E67E22", "#F59E0B", "#10B981", "#059669", "#3B82F6", "#6366F1"];
+  return {
+    name: ship.type,
+    count: ship.count,
+    fill: colors[index % colors.length],
+  };
+});
+
+// 3. Scatter (Sonar Blips) - Cartesian mapped to look like polar
+const MOCK_SONAR_BLIPS = Array.from({ length: 40 }).map((_, i) => {
+  const radius = Math.random() * 100;
+  const angle = Math.random() * Math.PI * 2;
+  return {
+    x: Math.round(Math.cos(angle) * radius),
+    y: Math.round(Math.sin(angle) * radius),
+    z: Math.floor(Math.random() * 5) + 1, // Size/Speed
+    type: Math.random() > 0.8 ? "anomaly" : "normal"
+  };
+});
+
+// 4. ComposedChart (Alerts Trend)
+const MOCK_TREND = [
+  { day: 'Mon', critical: 12, high: 24, handled: 30 },
+  { day: 'Tue', critical: 5, high: 15, handled: 20 },
+  { day: 'Wed', critical: 18, high: 22, handled: 15 },
+  { day: 'Thu', critical: 8, high: 10, handled: 28 },
+  { day: 'Fri', critical: 25, high: 35, handled: 10 },
+  { day: 'Sat', critical: 4, high: 8, handled: 40 },
+  { day: 'Sun', critical: 2, high: 5, handled: 45 },
 ];
-const maxAnomalyCount = Math.max(...MOCK_ANOMALIES.map((a) => a.count));
 
-function Card({ title, icon, children, className = "", index = 0 }: { title?: string; icon?: React.ReactNode; children: React.ReactNode; className?: string; index?: number }) {
-  return (
-    <div
-      className={`bg-[#131820] border border-[#2A3441] rounded-lg hover-glow hover-lift stagger-slide-up ${className}`}
-      style={{ "--i": index } as React.CSSProperties}
-    >
-      {title && (
-        <div className="flex items-center gap-2 px-3 py-2 border-b border-[#2A3441]">
-          {icon && <span className="text-[#6B7280]">{icon}</span>}
-          <span className="text-[10px] font-bold uppercase tracking-wider text-[#9CA3AF] font-[family-name:var(--font-display)]">{title}</span>
-        </div>
-      )}
-      <div className="p-3">{children}</div>
-    </div>
-  );
-}
 
-function StatCard({ label, value, change, trend, icon }: { label: string; value: number; change: string; trend: "up" | "down"; icon: string }) {
-  const IconComponent = icon === "Ship" ? Ship : icon === "AlertTriangle" ? AlertCircle : icon === "Activity" ? Activity : Shield;
-  return (
-    <div className="bg-[#131820] border border-[#2A3441] rounded-lg p-3 hover:border-[#E67E22]/30 transition-colors">
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-[9px] text-[#6B7280] uppercase tracking-wider font-[family-name:var(--font-display)]">{label}</span>
-        <div className="w-7 h-7 rounded-lg bg-[#0C0E14] border border-[#2A3441] flex items-center justify-center">
-          <IconComponent className="w-3.5 h-3.5 text-[#E67E22]" />
-        </div>
+// --- CUSTOM COMPONENTS ---
+
+const CustomTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-[#10141C]/90 backdrop-blur-md border border-[#2A3441] p-3 rounded-lg shadow-xl z-50">
+        <p className="text-[10px] text-[#9CA3AF] uppercase font-[family-name:var(--font-display)] mb-1">{label}</p>
+        {payload.map((entry: any, index: number) => (
+          <div key={`item-${index}`} className="flex items-center gap-2 mt-1">
+            <span className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color || entry.fill }} />
+            <span className="text-xs font-bold font-[family-name:var(--font-mono)] text-white">
+              {entry.name}: {entry.value}
+            </span>
+          </div>
+        ))}
       </div>
-      <div className="flex items-end justify-between">
-        <span className="text-xl font-bold text-[#E2E8F0] font-[family-name:var(--font-mono)] count-flash">{value.toLocaleString('en-US')}</span>
-        <div className={`flex items-center gap-0.5 text-[9px] font-[family-name:var(--font-mono)] ${trend === "up" ? "text-[#059669]" : "text-[#DC2626]"}`}>
-          {trend === "up" ? <TrendingUp className="w-2.5 h-2.5" /> : <TrendingDown className="w-2.5 h-2.5" />}
-          {change}
-        </div>
-      </div>
-    </div>
-  );
-}
+    );
+  }
+  return null;
+};
 
 function AlertCard({ alert }: { alert: typeof MOCK_ALERTS[0] }) {
   const severityColors = {
-    CRITICAL: "bg-[#DC2626]/20 text-[#DC2626] border-[#DC2626]/30",
-    HIGH: "bg-[#E67E22]/20 text-[#E67E22] border-[#E67E22]/30",
-    MEDIUM: "bg-[#F59E0B]/20 text-[#F59E0B] border-[#F59E0B]/30",
+    CRITICAL: "border-l-[#DC2626] bg-[#DC2626]/10 text-[#DC2626]",
+    HIGH: "border-l-[#E67E22] bg-[#E67E22]/10 text-[#E67E22]",
+    MEDIUM: "border-l-[#F59E0B] bg-[#F59E0B]/10 text-[#F59E0B]",
   };
   return (
-    <div className="flex items-center gap-2 px-2 py-1.5 hover:bg-[#1A1E28] rounded cursor-pointer transition-colors">
-      <div className={`w-1.5 h-1.5 rounded-full ${alert.severity === "CRITICAL" ? "bg-[#DC2626]" : alert.severity === "HIGH" ? "bg-[#E67E22]" : "bg-[#F59E0B]"}`} />
-      <div className="flex-1 min-w-0">
-        <div className="text-[10px] text-[#D1D5DB] truncate font-[family-name:var(--font-display)]">{alert.vessel}</div>
-        <div className="text-[8px] text-[#6B7280] font-[family-name:var(--font-mono)]">{alert.type} • {alert.location}</div>
+    <div className={`p-2.5 mb-2 rounded border-l-2 bg-[#131820] hover:bg-[#1A1E28] cursor-pointer transition-colors border border-t-[#2A3441] border-r-[#2A3441] border-b-[#2A3441] ${severityColors[alert.severity]}`}>
+      <div className="flex justify-between items-start mb-1">
+        <div className="text-[11px] font-bold text-[#E2E8F0] uppercase tracking-wider font-[family-name:var(--font-display)]">{alert.vessel}</div>
+        <span className="text-[8px] font-bold uppercase rounded px-1 py-0.5 bg-black/20">{alert.severity}</span>
       </div>
-      <span className={`text-[7px] px-1.5 py-0.5 rounded font-bold uppercase font-[family-name:var(--font-display)] ${severityColors[alert.severity]}`}>
-        {alert.severity}
-      </span>
+      <div className="flex items-center gap-1.5 mt-1 text-[9px] text-[#9CA3AF] font-[family-name:var(--font-mono)]">
+        <AlertTriangle className="w-3 h-3 shrink-0" />
+        <span className="truncate">{alert.type}</span>
+      </div>
+      <div className="flex items-center gap-1.5 mt-1 text-[8px] text-[#6B7280] font-[family-name:var(--font-mono)]">
+        <MapPin className="w-2.5 h-2.5 shrink-0" />
+        <span className="truncate">{alert.location}</span>
+      </div>
     </div>
   );
 }
 
-function TimelineItem({ event }: { event: typeof TIMELINE_EVENTS[0] }) {
-  const typeColors = {
-    critical: "bg-[#DC2626]",
-    alert: "bg-[#E67E22]",
-    warning: "bg-[#F59E0B]",
-    anomaly: "bg-[#3B82F6]",
-    info: "bg-[#06B6D4]",
-  };
+function StatCardCompact({ label, value, trend, icon }: { label: string; value: number; trend: "up" | "down"; icon: string }) {
+  const IconComponent = icon === "Ship" ? Ship : icon === "AlertTriangle" ? AlertTriangle : icon === "Activity" ? Activity : Shield;
   return (
-    <div className="flex items-start gap-2 py-1.5 hover:bg-[#1A1E28] rounded px-1 cursor-pointer transition-colors">
-      <span className="text-[8px] text-[#4A5568] font-[family-name:var(--font-mono)] shrink-0 w-9">{event.time}</span>
-      <div className={`w-1.5 h-1.5 rounded-full mt-1 ${typeColors[event.type as keyof typeof typeColors]}`} />
-      <div className="flex-1 min-w-0">
-        <div className="text-[9px] text-[#D1D5DB] font-[family-name:var(--font-display)]">{event.event}</div>
-        <div className="text-[8px] text-[#6B7280] font-[family-name:var(--font-mono)]">{event.vessel}</div>
+    <div className="bg-[#131820] border border-[#2A3441] rounded-lg p-3 hover:border-[#E67E22]/30 transition-all stagger-slide-up flex flex-col justify-center">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded bg-[#0C0E14] border border-[#2A3441] flex items-center justify-center">
+            <IconComponent className="w-4 h-4 text-[#E67E22]" />
+          </div>
+          <div>
+            <div className="text-lg font-bold text-white font-[family-name:var(--font-mono)] count-flash">{value.toLocaleString('en-US')}</div>
+            <div className="text-[9px] text-[#6B7280] uppercase tracking-widest font-[family-name:var(--font-display)]">{label}</div>
+          </div>
+        </div>
+        <div className={`flex items-center justify-center w-6 h-6 rounded-full bg-opacity-20 ${trend === "up" ? "bg-[#059669] text-[#059669]" : "bg-[#DC2626] text-[#DC2626]"}`}>
+          {trend === "up" ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+        </div>
       </div>
     </div>
   );
 }
+
+// --- PAGE COMPONENT ---
 
 export default function DashboardPage() {
   return (
-    <div className="h-[calc(100vh-56px)] flex flex-col overflow-hidden bg-[#0C0E14] page-enter">
-      {/* Header Bar - Rounded control panel */}
-      <div className="flex items-center justify-between px-4 py-2 border-b border-[#2A3441] bg-[#131820] stagger-in" style={{ "--i": 0 } as React.CSSProperties}>
-        <div className="flex items-center gap-3">
-          <span className="text-[10px] text-[#6B7280] uppercase tracking-wider font-[family-name:var(--font-display)]">Period</span>
-          <span className="text-xs font-bold text-[#E67E22] font-[family-name:var(--font-mono)]">2026-04</span>
+    <div className="h-full flex flex-col overflow-hidden bg-[#0C0E14] page-enter font-[family-name:var(--font-display)]">
+      
+      {/* Header Bar */}
+      <div className="flex flex-col md:flex-row items-center justify-between px-4 py-3 border-b border-[#2A3441] bg-[#10141C] shrink-0 z-10 w-full overflow-hidden">
+        <div className="flex items-center gap-3 w-full md:w-auto">
+          <div className="w-2 h-2 rounded-full bg-[#059669] animate-pulse" />
+          <span className="text-[12px] font-bold text-white uppercase tracking-[0.2em]">Live Operation Center</span>
         </div>
-        <div className="flex items-center gap-1">
-          <button className="flex items-center gap-1.5 px-2 py-1.5 bg-[#0C0E14] border border-[#2A3441] rounded-lg text-[9px] text-[#6B7280] hover:text-[#D1D5DB] hover:border-[#E67E22]/50 btn-press transition-all duration-200 uppercase tracking-wider font-[family-name:var(--font-display)]">
-            <RotateCcw className="w-3 h-3" />
-            Reset
-          </button>
-          <button className="flex items-center gap-1.5 px-2 py-1.5 bg-[#0C0E14] border border-[#2A3441] rounded-lg text-[9px] text-[#6B7280] hover:text-[#D1D5DB] hover:border-[#E67E22]/50 btn-press transition-all duration-200 uppercase tracking-wider font-[family-name:var(--font-mono)]">
-            <Calendar className="w-3 h-3" />
-            01 APR — 08 APR
-          </button>
-          <button className="flex items-center gap-1.5 px-2 py-1.5 bg-[#E67E22]/10 border border-[#E67E22]/30 rounded-lg text-[9px] text-[#E67E22] hover:bg-[#E67E22]/20 btn-press transition-all duration-200 uppercase tracking-wider font-[family-name:var(--font-display)]">
-            <Download className="w-3 h-3" />
-            Export
-          </button>
+        <div className="flex items-center gap-4 mt-3 md:mt-0 overflow-x-auto w-full md:w-auto custom-scrollbar pb-1 md:pb-0 hide-scrollbar">
+          <div className="flex items-center gap-2 text-[10px] text-[#6B7280] uppercase tracking-widest shrink-0">
+            <Radio className="w-3 h-3" /> Sync: <span className="text-[#059669]">Realtime</span>
+          </div>
+          <span className="text-[#2A3441]">|</span>
+          <div className="text-[10px] text-[#6B7280] uppercase tracking-widest shrink-0">
+            Node: <span className="text-white font-[family-name:var(--font-mono)]">Jakarta-HQ-01</span>
+          </div>
         </div>
       </div>
 
-      {/* Dashboard Grid */}
-      <div className="flex-1 overflow-y-auto p-3">
-        {/* Overview Stats Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-3">
-          {DASHBOARD_STATS.map((stat, i) => (
-            <StatCard key={stat.label} {...stat} />
-          ))}
+      {/* Main Asymmetric Grid Layout */}
+      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden p-2 lg:p-4 gap-4">
+        
+        {/* === LEFT COLUMN (25%) - LIVE ALERT FEED === */}
+        <div className="w-full lg:w-1/4 flex flex-col shrink-0 gap-3 h-[400px] lg:h-full">
+          <div className="flex items-center gap-2 px-1 shrink-0 mt-1">
+            <Zap className="w-4 h-4 text-[#F59E0B]" />
+            <h2 className="text-[10px] font-bold uppercase tracking-widest text-[#D1D5DB]">Live Critical Feed</h2>
+          </div>
+          <div className="flex-1 overflow-y-auto pr-1 custom-scrollbar space-y-1">
+            {/* Duplicated for scroll effect demonstration */}
+            {[...MOCK_ALERTS, ...MOCK_ALERTS].map((alert, idx) => (
+              <AlertCard key={`${alert.id}-${idx}`} alert={alert} />
+            ))}
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
-          {/* === Row 1 === */}
-
-          {/* Top 10 Ships Type — Horizontal Bar */}
-          <Card title="Vessel Type Distribution" icon={<BarChart3 className="w-3 h-3" />} index={0}>
-            <div className="space-y-1.5">
-              {MOCK_SHIP_TYPES.map((ship, i) => (
-                <div key={ship.type} className="flex items-center gap-2">
-                  <span className="text-[9px] text-[#6B7280] w-24 text-right shrink-0 truncate uppercase tracking-wider font-[family-name:var(--font-display)]">
-                    {ship.type}
-                  </span>
-                  <div className="flex-1 h-4 bg-[#0C0E14] border border-[#1E252F] overflow-hidden rounded-sm">
-                    <div
-                      className="h-full bg-gradient-to-r from-[#E67E22] to-[#059669] flex items-center justify-end pr-1.5 bar-grow"
-                      style={{ width: `${(ship.count / maxShipCount) * 100}%`, "--i": i } as React.CSSProperties}
-                    >
-                      <span className="text-[8px] font-bold text-[#0C0E14] font-[family-name:var(--font-mono)]">
-                        {ship.count.toLocaleString('en-US')}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              ))}
+        {/* === CENTER COLUMN (50%) - PRIMARY VISUALIZATIONS === */}
+        <div className="w-full lg:w-2/4 flex flex-col gap-4 h-[800px] lg:h-full min-h-[600px]">
+          
+          {/* Top Half: Area Heartbeat */}
+          <div className="flex-1 bg-[#131820] border border-[#2A3441] rounded-lg p-3 flex flex-col hover-glow relative overflow-hidden">
+            <div className="flex items-center justify-between mb-2 shrink-0 relative z-10">
+              <div className="flex items-center gap-2">
+                <Activity className="w-4 h-4 text-[#E67E22]" />
+                <h2 className="text-[10px] font-bold uppercase tracking-widest text-[#D1D5DB]">Vessel Fleet Heartbeat (24H)</h2>
+              </div>
             </div>
-          </Card>
+            <div className="flex-1 relative z-10">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={MOCK_AREA_TIMELINE} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="colorAnomalies" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#DC2626" stopOpacity={0.6}/>
+                      <stop offset="95%" stopColor="#DC2626" stopOpacity={0}/>
+                    </linearGradient>
+                    <linearGradient id="colorVerified" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#E67E22" stopOpacity={0.4}/>
+                      <stop offset="95%" stopColor="#E67E22" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#2A3441" vertical={false} />
+                  <XAxis dataKey="time" tick={{ fill: '#6B7280', fontSize: 9, fontFamily: 'var(--font-mono)' }} stroke="#2A3441" />
+                  <YAxis tick={{ fill: '#6B7280', fontSize: 9, fontFamily: 'var(--font-mono)' }} stroke="#2A3441" />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Legend iconType="circle" wrapperStyle={{ fontSize: '10px', paddingTop: '10px' }} />
+                  <Area type="monotone" dataKey="verifications" stroke="#E67E22" strokeWidth={2} fillOpacity={1} fill="url(#colorVerified)" />
+                  <Area type="monotone" dataKey="anomalies" stroke="#DC2626" strokeWidth={2} fillOpacity={1} fill="url(#colorAnomalies)" />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
 
-          {/* Heading by Speed — Radar */}
-          <Card title="Heading by Speed" icon={<Compass className="w-3 h-3" />} index={1}>
-            <div className="flex items-center justify-center py-2">
-              <div className="relative w-40 h-40">
-                {/* Concentric circles */}
-                {[100, 75, 50, 25].map((size) => (
-                  <div
-                    key={size}
-                    className="absolute border border-[#2A3441] rounded-full"
-                    style={{
-                      width: `${size}%`,
-                      height: `${size}%`,
-                      top: `${(100 - size) / 2}%`,
-                      left: `${(100 - size) / 2}%`,
-                    }}
-                  />
-                ))}
-                {/* Compass lines */}
-                <div className="absolute top-0 left-1/2 w-px h-full bg-[#2A3441] -translate-x-1/2" />
-                <div className="absolute top-1/2 left-0 w-full h-px bg-[#2A3441] -translate-y-1/2" />
-                <div className="absolute top-0 left-0 w-full h-full origin-center rotate-45">
-                  <div className="absolute top-0 left-1/2 w-px h-full bg-[#1E252F] -translate-x-1/2" />
-                </div>
-                <div className="absolute top-0 left-0 w-full h-full origin-center -rotate-45">
-                  <div className="absolute top-0 left-1/2 w-px h-full bg-[#1E252F] -translate-x-1/2" />
-                </div>
-                {/* Direction labels */}
-                {[
-                  { label: "N", top: "-8%", left: "46%" },
-                  { label: "E", top: "44%", left: "102%" },
-                  { label: "S", top: "102%", left: "46%" },
-                  { label: "W", top: "44%", left: "-12%" },
-                ].map((d) => (
-                  <span
-                    key={d.label}
-                    className="absolute text-[8px] text-[#4A5568] font-bold font-[family-name:var(--font-mono)]"
-                    style={{ top: d.top, left: d.left }}
+          {/* Bottom Half: Single Chart Now */}
+          <div className="flex-1 flex flex-col md:flex-row gap-4">
+            
+            {/* Radial Bar Vessely Types */}
+            <div className="flex-1 bg-[#131820] border border-[#2A3441] rounded-lg p-3 flex flex-col hover-glow">
+              <div className="flex items-center gap-2 mb-2 shrink-0">
+                <Ship className="w-4 h-4 text-[#10B981]" />
+                <h2 className="text-[10px] font-bold uppercase tracking-widest text-[#D1D5DB]">Vessel Class Density</h2>
+              </div>
+              <div className="flex-1">
+                <ResponsiveContainer width="100%" height="100%">
+                  <RadialBarChart 
+                    cx="50%" 
+                    cy="50%" 
+                    innerRadius="30%" 
+                    outerRadius="100%" 
+                    barSize={20} 
+                    data={MOCK_RADIAL_TYPES}
                   >
-                    {d.label}
-                  </span>
-                ))}
-                {/* Radar sweep */}
-                <div className="absolute inset-0 rounded-full overflow-hidden">
-                  <div
-                    className="absolute top-0 left-1/2 w-1/2 h-1/2 origin-bottom-left animate-spin-slow"
-                    style={{ background: "linear-gradient(to right, transparent, rgba(230, 126, 34, 0.08))" }}
-                  />
-                </div>
-                {/* Data points with pulse */}
-                <div className="absolute top-[15%] left-[45%] w-8 h-10 bg-[#E67E22]/20 rounded-full blur-sm dot-pulse" style={{ "--i": 0 } as React.CSSProperties} />
-                <div className="absolute top-[35%] left-[55%] w-6 h-8 bg-[#E67E22]/15 rounded-full blur-sm dot-pulse" style={{ "--i": 1 } as React.CSSProperties} />
-                <div className="absolute top-[60%] left-[40%] w-5 h-6 bg-[#E67E22]/10 rounded-full blur-sm dot-pulse" style={{ "--i": 2 } as React.CSSProperties} />
+                    <RadialBar
+                      background={{ fill: '#1A1E28' }}
+                      dataKey="count"
+                      cornerRadius={6}
+                    />
+                    <Legend 
+                      iconSize={8} 
+                      layout="horizontal" 
+                      verticalAlign="bottom"
+                      align="center"
+                      wrapperStyle={{ 
+                        paddingTop: '20px',
+                        lineHeight: '24px',
+                        fontSize: '10px',
+                        fontFamily: 'var(--font-display)',
+                        color: '#9CA3AF',
+                        textTransform: 'uppercase'
+                      }} 
+                    />
+                    <Tooltip content={<CustomTooltip />} />
+                  </RadialBarChart>
+                </ResponsiveContainer>
               </div>
             </div>
-            {/* Legend */}
-            <div className="flex items-center justify-center gap-3 mt-1">
-              {[
-                { label: "0", color: "bg-[#3B82F6]" },
-                { label: "0-3", color: "bg-[#06B6D4]" },
-                { label: "3-10", color: "bg-[#059669]" },
-                { label: ">10", color: "bg-[#E67E22]" },
-              ].map((l) => (
-                <div key={l.label} className="flex items-center gap-1">
-                  <span className={`w-1.5 h-1.5 rounded-sm ${l.color}`} />
-                  <span className="text-[8px] text-[#6B7280] font-[family-name:var(--font-mono)]">{l.label}</span>
-                </div>
-              ))}
-            </div>
-          </Card>
 
-          {/* Verified vs Unverified — Donut */}
-          <Card title="Vessel Verification Status" icon={<PieChart className="w-3 h-3" />} index={2}>
-            <p className="text-[9px] text-[#6B7280] mb-3">
-              Verified: IMO assigned | Unverified: IMO undefined
-            </p>
-            <div className="flex items-center justify-center">
-              <div className="relative w-36 h-36 group">
-                <div
-                  className="w-full h-full rounded-full transition-transform duration-500 group-hover:scale-105"
-                  style={{
-                    background: `conic-gradient(
-                      #E67E22 0deg 284.4deg,
-                      #059669 284.4deg 360deg
-                    )`,
-                  }}
-                />
-                <div className="absolute top-[20%] left-[20%] w-[60%] h-[60%] rounded-full bg-[#131820] flex items-center justify-center border border-[#2A3441]">
-                  <div className="text-center">
-                    <div className="text-base font-bold text-[#E67E22] font-[family-name:var(--font-mono)] count-flash" style={{ "--i": 0 } as React.CSSProperties}>78.9%</div>
-                    <div className="text-[8px] text-[#6B7280] uppercase tracking-wider font-[family-name:var(--font-display)]">Verified</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center justify-center gap-4 mt-2">
-              <div className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-sm bg-[#E67E22]" />
-                <span className="text-[9px] text-[#6B7280] font-[family-name:var(--font-mono)]">78.9%</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-sm bg-[#059669]" />
-                <span className="text-[9px] text-[#6B7280] font-[family-name:var(--font-mono)]">21.1%</span>
-              </div>
-            </div>
-          </Card>
-
-          {/* === Row 2 === */}
-
-          {/* Top Anomaly */}
-          <Card title="Anomaly Detection" icon={<AlertTriangle className="w-3 h-3" />} index={3}>
-            <div className="space-y-2">
-              {MOCK_ANOMALIES.map((anomaly, i) => (
-                <div key={anomaly.type} className="flex items-center gap-2">
-                  <span className="text-[9px] text-[#6B7280] w-16 text-right shrink-0 uppercase tracking-wider font-[family-name:var(--font-display)]">
-                    {anomaly.type}
-                  </span>
-                  <div className="flex-1 h-4 bg-[#0C0E14] border border-[#1E252F] overflow-hidden rounded-sm">
-                    <div
-                      className={`h-full ${anomaly.color} flex items-center pl-1.5 bar-grow`}
-                      style={{
-                        width: `${(anomaly.count / maxAnomalyCount) * 100}%`,
-                        "--i": i,
-                      } as React.CSSProperties}
-                    >
-                      <span className="text-[8px] font-bold text-[#0C0E14] font-[family-name:var(--font-mono)]">
-                        {anomaly.count.toLocaleString('en-US')}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </Card>
-
-          {/* Empty placeholder */}
-          <Card title="Active Alerts" icon={<AlertCircle className="w-3 h-3" />} index={4}>
-            <div className="space-y-1 max-h-48 overflow-y-auto">
-              {MOCK_ALERTS.map((alert) => (
-                <AlertCard key={alert.id} alert={alert} />
-              ))}
-            </div>
-          </Card>
-
-          {/* Anomaly Hours — Timeline */}
-          <Card title="Anomaly Timeline (24h)" icon={<Clock className="w-3 h-3" />} index={5}>
-            <div className="space-y-1.5 text-[9px]">
-              {[
-                { label: "7 Days", dots: [0, 1, 0, 2, 0, 1, 0, 2, 1, 0, 1, 2, 0, 1, 0, 2, 1, 0, 1, 0, 0, 1, 2, 1] },
-                { label: "AIS Gap", dots: [1, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0] },
-                { label: "Black List", dots: [2, 2, 3, 2, 2, 3, 2, 3, 2, 2, 3, 2, 3, 2, 2, 3, 2, 3, 2, 2, 3, 2, 3, 2] },
-                { label: "Drifting", dots: [1, 2, 1, 2, 1, 2, 3, 2, 1, 2, 1, 2, 1, 2, 3, 2, 1, 2, 1, 2, 1, 2, 3, 2] },
-              ].map((row, rowIdx) => (
-                <div key={row.label} className="flex items-center gap-2 row-enter" style={{ "--i": rowIdx } as React.CSSProperties}>
-                  <span className="w-16 text-right text-[#6B7280] shrink-0 text-[8px] uppercase tracking-wider font-[family-name:var(--font-display)] truncate">
-                    {row.label}
-                  </span>
-                  <div className="flex-1 flex items-center gap-[2px]">
-                    {row.dots.map((d, i) => (
-                      <div
-                        key={i}
-                        className={`w-2 h-2 rounded-sm transition-all duration-200 hover:scale-125 cursor-pointer ${
-                          d === 0
-                            ? "bg-[#0C0E14] hover:bg-[#1A1E28]"
-                            : d === 1
-                            ? "bg-[#E67E22]/40 hover:bg-[#E67E22]/60"
-                            : d === 2
-                            ? "bg-[#E67E22]/70 hover:bg-[#E67E22]/90"
-                            : "bg-[#E67E22] hover:bg-[#E67E22] hover:shadow-[0_0_6px_rgba(230,126,34,0.5)]"
-                        }`}
-                      />
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </Card>
+          </div>
         </div>
+
+        {/* === RIGHT COLUMN (25%) - STATS & VERIFICATION === */}
+        <div className="w-full lg:w-1/4 flex flex-col gap-4 h-[800px] lg:h-full">
+          
+          {/* Vertical KPIs */}
+          <div className="flex flex-col gap-3 shrink-0">
+            {DASHBOARD_STATS.map((stat) => (
+              <StatCardCompact key={stat.label} {...stat} />
+            ))}
+          </div>
+
+          {/* Alert Handled Trends (Composed Chart) */}
+          <div className="flex-1 bg-[#131820] border border-[#2A3441] rounded-lg p-3 flex flex-col hover-glow overflow-hidden">
+            <div className="flex items-center gap-2 mb-2 shrink-0">
+              <Shield className="w-4 h-4 text-[#3B82F6]" />
+              <h2 className="text-[10px] font-bold uppercase tracking-widest text-[#D1D5DB]">Intervention Trends</h2>
+            </div>
+            <div className="flex-1 mt-2">
+              <ResponsiveContainer width="100%" height="100%">
+                <ComposedChart data={MOCK_TREND} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
+                  <CartesianGrid stroke="#2A3441" vertical={false} strokeDasharray="3 3"/>
+                  <XAxis dataKey="day" tick={{ fill: '#6B7280', fontSize: 9 }} stroke="#2A3441" />
+                  <YAxis tick={{ fill: '#6B7280', fontSize: 9 }} stroke="#2A3441" />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Legend iconSize={8} wrapperStyle={{ fontSize: '9px', textTransform: 'uppercase' }} />
+                  <Bar dataKey="critical" stackId="a" fill="#DC2626" radius={[0,0,4,4]} />
+                  <Bar dataKey="high" stackId="a" fill="#E67E22" radius={[4,4,0,0]} />
+                  <Line type="monotone" dataKey="handled" stroke="#10B981" strokeWidth={3} dot={{ r: 4, fill: '#10B981', strokeWidth: 2, stroke: '#0C0E14' }} />
+                </ComposedChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+        </div>
+
       </div>
     </div>
   );

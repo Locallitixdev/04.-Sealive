@@ -8,11 +8,10 @@ import {
 } from "lucide-react";
 
 export const NAV_ITEMS = [
-  { label: "Interops", href: "/interops", icon: Globe },
-  { label: "Executive Dashboard", href: "/dashboard", icon: BarChart3 },
-  { label: "Situational Awareness", href: "/situational", icon: Radar },
-  { label: "Case Management", href: "/cases", icon: FolderKanban },
-  { label: "Map", href: "/map", icon: Map },
+  { label: "Dashboard", href: "/dashboard", icon: BarChart3 },
+  { label: "Monitoring", href: "/situational", icon: Radar },
+  { label: "Incidents", href: "/cases", icon: FolderKanban },
+  { label: "Live Map", href: "/map", icon: Map },
 ] as const;
 
 export const SEVERITY = {
@@ -47,10 +46,10 @@ export const VESSEL_TYPES = [
 
 // Mock vessels for sidebar
 export const MOCK_VESSELS = [
-  { id: "V001", name: "MSC AGATA III", flag: "🇵🇦", type: "Cargo", status: "Underway", speed: "12.5 kn", mmsi: "351456000", imo: "9839012", lastUpdate: "2 min ago" },
-  { id: "V002", name: "JOLIE", flag: "🇱🇷", type: "Tanker", status: "Anchored", speed: "0.0 kn", mmsi: "636019234", imo: "9741553", lastUpdate: "5 min ago" },
-  { id: "V003", name: "MYSTIC", flag: "🇭🇰", type: "Cargo", status: "Underway", speed: "14.2 kn", mmsi: "477123456", imo: "9654321", lastUpdate: "1 min ago" },
-  { id: "V004", name: "OCEAN GRACE", flag: "🇸🇬", type: "Tanker", status: "Moored", speed: "0.0 kn", mmsi: "563001234", imo: "9876543", lastUpdate: "3 min ago" },
+  { id: "V001", name: "SEVEN SEAS SPLENDOR", flag: "🇸🇬", type: "Luxury Cruise Ship", status: "Underway", speed: "9.4 kn", mmsi: "141762274", imo: "3517676", lastUpdate: "12 min ago" },
+  { id: "V002", name: "AZEAM", flag: "🇲🇭", type: "Superyacht & Megayacht", status: "Underway", speed: "6.1 kn", mmsi: "103186938", imo: "7926682", lastUpdate: "19 min ago" },
+  { id: "V003", name: "YACHT-022", flag: "🇭🇰", type: "Yacht", status: "Underway", speed: "14.2 kn", mmsi: "477123456", imo: "9654321", lastUpdate: "1 min ago" },
+  { id: "V004", name: "MIGHTY TUG", flag: "🇳🇴", type: "Tug", status: "Moored", speed: "0.0 kn", mmsi: "563001234", imo: "9876543", lastUpdate: "3 min ago" },
   { id: "V005", name: "SWIFT EAGLE", flag: "🇯🇵", type: "Fishing", status: "Underway", speed: "8.3 kn", mmsi: "431789012", imo: "9567890", lastUpdate: "4 min ago" },
   { id: "V006", name: "PACIFIC DAWN", flag: "🇲🇭", type: "Passenger", status: "Underway", speed: "18.7 kn", mmsi: "538006789", imo: "9912345", lastUpdate: "1 min ago" },
   { id: "V007", name: "CORAL SEA", flag: "🇮🇩", type: "Cargo", status: "Anchored", speed: "0.1 kn", mmsi: "525100345", imo: "9823456", lastUpdate: "6 min ago" },

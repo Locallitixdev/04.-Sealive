@@ -1,0 +1,11 @@
+services:
+  sealive-app:
+    container_name: sealive-app
+    build:
+      context: ./sealive-app
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production

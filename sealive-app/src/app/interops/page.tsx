@@ -65,7 +65,7 @@ const integrations = [
 
 export default function InteropsPage() {
   return (
-    <div className="h-[calc(100vh-56px)] flex flex-col overflow-hidden bg-[#0C0E14] page-enter">
+    <div className="h-full flex flex-col overflow-hidden bg-[#0C0E14] page-enter">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-2 border-b border-[#2A3441] bg-[#131820]">
         <div className="flex items-center gap-2">

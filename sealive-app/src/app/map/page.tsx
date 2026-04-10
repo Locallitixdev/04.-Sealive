@@ -31,7 +31,8 @@ import {
   AlertTriangle,
   AlertCircle,
   ShieldAlert,
-  Globe
+  Globe,
+  Star
 } from "lucide-react";
 import { MOCK_BOTTOM_STATS } from "@/lib/constants";
 import { MOCK_VESSEL_GEOJSON, VESSEL_COLORS } from "@/components/map/MapView";
@@ -60,6 +61,7 @@ const MapView = dynamic(() => import("@/components/map/MapView"), {
 // Extract vessels from GeoJSON for sidebar
 // Extraction helper removed from top-level to ensure proper re-rendering with HMR
 const MOCK_ALERTS = [
+  { id: 7, type: "CRITICAL", title: "AIS OFF DETECTED", details: "MT SHADOW TANKER • Deliberate AIS shutdown detected near border quadrant. Dark activity suspected.", time: "Just now" },
   { id: 6, type: "CRITICAL", title: "VESSEL MISSING", details: "SY OCEAN SPIRIT • Did not arrive at destination Labuan Bajo. Signal lost North Sumbawa.", time: "48h ago" },
   { id: 1, type: "WARNING", title: "AIS SIGNAL LOST", details: "MV OCEAN STAR • Missing since 12:45 UTC", time: "12m ago" },
   { id: 4, type: "OSINT", title: "SOCIAL MEDIA ANOMALY", details: "X (Twitter) • Viral keywords detected: 'bongkar malam', 'aktivitas mencurigakan'", time: "3m ago" },
@@ -203,11 +205,11 @@ export default function MapPage() {
   }, [searchQuery, livePositions, riskStatusFilter, vesselSourceFilter]);
 
   return (
-    <div className="h-[calc(100vh-56px)] flex flex-col overflow-hidden bg-[#0C0E14] page-enter">
+    <div className="h-full flex flex-col overflow-hidden bg-[#0C0E14] page-enter">
       <div className="flex-1 relative flex overflow-hidden">
         {/* === LEFT SIDEBAR - Tactical Panel === */}
       <aside
-        className={`relative z-10 h-full bg-[#0C0E14] border-r border-[#2A3441] flex flex-col sidebar-slide ${sidebarOpen ? "w-[300px] min-w-[300px] opacity-100" : "w-0 min-w-0 opacity-0 overflow-hidden"
+        className={`absolute md:relative z-30 md:z-10 h-full bg-[#0C0E14] border-r border-[#2A3441] flex flex-col transition-all duration-300 ${sidebarOpen ? "w-[280px] md:w-[300px] md:min-w-[300px] translate-x-0 shadow-2xl md:shadow-none" : "w-[280px] md:w-0 md:min-w-0 -translate-x-full md:translate-x-0 opacity-0 overflow-hidden"
           }`}
       >
         {/* Header with scan line effect */}
@@ -354,8 +356,7 @@ export default function MapPage() {
       {/* Sidebar Toggle */}
       <button
         onClick={() => setSidebarOpen(!sidebarOpen)}
-        className="absolute z-20 top-3 bg-[#131820] border border-[#2A3441] border-l-0 rounded-r-lg p-1.5 hover:bg-[#1A1E28] hover:border-[#E67E22]/30 btn-press transition-all duration-300"
-        style={{ left: sidebarOpen ? "300px" : "0px" }}
+        className={`absolute z-40 md:z-20 top-3 bg-[#131820] border border-[#2A3441] border-l-0 rounded-r-lg p-1.5 hover:bg-[#1A1E28] hover:border-[#E67E22]/30 btn-press transition-all duration-300 ${sidebarOpen ? "left-[280px] md:left-[300px]" : "left-0"}`}
       >
         {sidebarOpen ? (
           <ChevronLeft className="w-3 h-3 text-[#6B7280]" />
@@ -451,7 +452,7 @@ export default function MapPage() {
             selectedVesselId={selectedVesselId}
             onVesselSelect={(v) => {
               setSelectedVesselId(v?.id || null);
-              if (v?.id) setSidebarOpen(false);
+              if (v?.id) setSidebarOpen(true);
               setPlaybackIdx(-1);
               setIsPlaying(false);
             }}
@@ -479,14 +480,17 @@ export default function MapPage() {
             livePositions={livePositions}
             sourceFilter={vesselSourceFilter}
           />
+
+          {/* === RIGHT SIDEBAR (VESSEL DETAIL) REMOVED - using map popup instead === */}
+
         </div>
 
         {/* === BOTTOM DRAGGABLE PANEL (HISTORY TRACK) === */}
         {selectedVessel && (
-          <div className="h-[280px] shrink-0 bg-[#0C0E14] border-t border-[#2A3441] flex flex-col animate-in slide-in-from-bottom-8 duration-300 z-20 shadow-[0_-8px_24px_rgba(0,0,0,0.5)]">
-            <div className="flex flex-1 overflow-hidden">
+          <div className="absolute top-[40%] bottom-0 left-0 right-0 md:top-auto md:relative h-auto md:h-[280px] shrink-0 bg-[#0C0E14] border-t border-[#2A3441] flex flex-col animate-in slide-in-from-bottom-8 duration-300 z-20 shadow-[0_-8px_24px_rgba(0,0,0,0.5)]">
+            <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
               {/* Left Column - Vessel Tracking */}
-              <div className="w-[240px] flex flex-col border-r border-[#2A3441] bg-[#131820]">
+              <div className="w-full md:w-[240px] flex flex-col border-b md:border-b-0 border-r border-[#2A3441] bg-[#131820] shrink-0">
                 <div className="h-10 flex items-center justify-between px-3 border-b border-[#2A3441] shrink-0">
                   <span className="text-[11px] font-bold text-white font-[family-name:var(--font-display)]">Vessel Tracking (1)</span>
                   <button className="text-[#6B7280] hover:text-[#D1D5DB]">
@@ -505,8 +509,7 @@ export default function MapPage() {
                 <div className="h-10 flex items-center justify-between px-3 border-t border-[#2A3441] shrink-0">
                   <button className="flex items-center gap-1.5 text-[#6B7280] hover:text-white transition-colors"
                      onClick={() => { setSelectedVesselId(null); setSidebarOpen(true); }}>
-                    <X className="w-3 h-3" />
-                    <span className="text-[10px] font-bold capitalize">Clear Vessel</span>
+                    <span className="text-[11px] font-medium tracking-wide">✕ Clear Vessel</span>
                   </button>
                   <label className="flex items-center gap-1.5 cursor-pointer">
                     <input type="checkbox" className="rounded border-[#2A3441] bg-[#1A1E28]" checked={false} readOnly />
@@ -549,8 +552,8 @@ export default function MapPage() {
                       <span className="text-[10px] text-[#D1D5DB]">Export</span>
                     </button>
                     
-                    <button className="flex items-center gap-1.5 border border-[#2A3441] rounded bg-[#1A1E28] hover:bg-[#1E252F] px-2 py-1 transition-colors">
-                      <Activity className="w-3 h-3 text-[#D1D5DB]" />
+                    <button className="flex items-center gap-1.5 border border-[#2A3441] rounded bg-[#1A1E28] hover:bg-[#1E252F] px-2 py-1 transition-colors ml-2">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5 text-[#D1D5DB]"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
                       <span className="text-[10px] text-[#D1D5DB]">Speed (knot)</span>
                       <ChevronDown className="w-3 h-3 text-[#6B7280]" />
                     </button>
@@ -565,15 +568,15 @@ export default function MapPage() {
                 </div>
 
                 {/* Table */}
-                <div className="flex-1 overflow-auto bg-[#0C0E14]">
+                <div className="flex-1 overflow-auto bg-[#131820]">
                   <table className="w-full text-left border-collapse">
-                    <thead className="sticky top-0 bg-[#17405A] text-white z-10 border-b border-[#2A3441]">
-                      <tr className="text-[10px] font-bold font-[family-name:var(--font-display)]">
+                    <thead className="sticky top-0 bg-[#143B52] text-[#E2E8F0] z-10">
+                      <tr className="text-[10px] font-bold font-[family-name:var(--font-display)] border-b border-[#224A61]">
                         <th className="py-2.5 px-4 font-normal">Time ▲</th>
                         <th className="py-2.5 px-4 font-normal">Coordinate</th>
-                        <th className="py-2.5 px-4 font-normal">Name</th>
-                        <th className="py-2.5 px-4 font-normal">MMSI</th>
-                        <th className="py-2.5 px-4 font-normal">IMO</th>
+                        <th className="py-2.5 px-4 font-normal text-center">Name</th>
+                        <th className="py-2.5 px-4 font-normal text-center">MMSI</th>
+                        <th className="py-2.5 px-4 font-normal text-center">IMO</th>
                       </tr>
                     </thead>
                     <tbody className="text-[10px] text-[#D1D5DB] font-[family-name:var(--font-mono)]">
@@ -608,13 +611,13 @@ export default function MapPage() {
                                  setPlaybackIdx(tableTracks.length - 1 - i);
                                  setIsPlaying(false);
                               }}
-                              className={`border-b border-[#2A3441] hover:brightness-110 transition-colors cursor-pointer ${isRowActive ? "bg-[#0EA5E9]/30 border-l-[3px] border-l-[#0EA5E9]" : (i % 2 === 0 ? "bg-[#1C212B]" : "bg-[#232A35]")}`}
+                              className={`border-b border-[#1A212D] hover:brightness-110 transition-colors cursor-pointer ${isRowActive ? "bg-[#0EA5E9]/30 border-l-[3px] border-l-[#0EA5E9]" : (i % 2 === 0 ? "bg-[#181E29]" : "bg-[#1C2330]")}`}
                             >
                               <td className="py-2.5 px-4">{tsStr}</td>
                               <td className="py-2.5 px-4">{coordStr}</td>
-                              <td className="py-2.5 px-4 text-white font-[family-name:var(--font-display)] uppercase font-bold">{selectedVessel.name}</td>
-                              <td className="py-2.5 px-4">{selectedVessel.mmsi}</td>
-                              <td className="py-2.5 px-4">{selectedVessel.imo}</td>
+                              <td className="py-2.5 px-4 text-white font-[family-name:var(--font-display)] uppercase font-bold text-center">{selectedVessel.name}</td>
+                              <td className="py-2.5 px-4 text-center">{selectedVessel.mmsi}</td>
+                              <td className="py-2.5 px-4 text-center">{selectedVessel.imo}</td>
                             </tr>
                           );
                         });
@@ -639,7 +642,7 @@ export default function MapPage() {
                       }}
                       className="h-full w-12 flex items-center justify-center bg-[#0EA5E9] hover:bg-[#0284C7] transition-colors"
                     >
-                      {isPlaying ? <Pause className="w-4 h-4 text-white fill-current" /> : <Play className="w-4 h-4 text-white fill-current" />}
+                      {isPlaying ? <Pause className="w-5 h-5 text-white fill-current" /> : <Play className="w-5 h-5 text-white fill-current" />}
                     </button>
                     <button 
                       onClick={() => {
@@ -655,13 +658,16 @@ export default function MapPage() {
                     </button>
                   </div>
                   
-                  <div className="flex items-center gap-5 px-4">
-                    {["Tracks", "Line", "Names", "Speed", "Nearby"].map((lbl, idx) => (
-                      <label key={lbl} className="flex items-center gap-1.5 cursor-pointer">
-                        <input type="checkbox" className="rounded border-[#2A3441] bg-[#1A1E28]/50 form-checkbox accent-[#0EA5E9]" defaultChecked={idx === 0 || idx === 2} />
-                        <span className="text-[10px] text-[#6B7280] font-medium">{lbl}</span>
-                      </label>
-                    ))}
+                   <div className="flex items-center gap-5 px-4 h-full">
+                    {["Tracks", "Line", "Names", "Speed", "Nearby"].map((lbl, idx) => {
+                      const isDefaultChecked = idx === 0 || idx === 2;
+                      return (
+                        <label key={lbl} className="flex items-center gap-1.5 cursor-pointer h-full group">
+                          <input type="checkbox" className={`rounded ${isDefaultChecked ? 'bg-[#0EA5E9] border-[#0EA5E9]' : 'border-[#4B5563] bg-transparent group-hover:border-[#6B7280]'} form-checkbox accent-[#0EA5E9] cursor-pointer`} defaultChecked={isDefaultChecked} />
+                          <span className={`text-[10px] font-bold ${isDefaultChecked ? 'text-[#38BDF8]' : 'text-[#6B7280]'}`}>{lbl}</span>
+                        </label>
+                      );
+                    })}
                   </div>
                 </div>
               </div>
@@ -669,161 +675,7 @@ export default function MapPage() {
           </div>
         )}
       </div>
-
-      {/* === RIGHT SIDEBAR (VESSEL DETAIL) === */}
-      {selectedVessel && (
-        <aside className="w-[320px] bg-[#10141C] border-l border-[#2A3441] flex flex-col z-20 shrink-0 shadow-[-8px_0_24px_rgba(0,0,0,0.5)] animate-in slide-in-from-right-8 duration-300">
-          {/* Header Photo Section */}
-          <div className="h-[140px] relative shrink-0 bg-[#1A1E28]">
-            <img src="https://images.unsplash.com/photo-1572097561858-a5b591b65e9f?q=80&w=600&auto=format&fit=crop" alt="Ship" className="absolute inset-0 w-full h-full object-cover opacity-70 border-b border-[#2A3441]" />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#10141C] via-black/20 to-transparent" />
-            
-            {/* Top controls (Score, Dim, Close) */}
-            <div className="absolute top-2 left-2 right-2 flex justify-between items-start">
-              {/* Risk Score Circle */}
-              <div className="flex flex-col items-center justify-center w-[52px] h-[52px] rounded-full border-[3px] border-[#DC2626] bg-[#10141C]/80 shadow-[0_0_15px_rgba(220,38,38,0.3)] backdrop-blur-sm">
-                <span className="text-[11px] font-bold text-white leading-none">79.6</span>
-                <span className="text-[5px] text-[#DC2626] uppercase font-bold mt-0.5 leading-none px-1 text-center">Risk Score</span>
-              </div>
-              
-              <div className="flex items-center gap-2">
-                <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-[#10141C]/60 backdrop-blur-sm border border-[#2A3441]">
-                  <Ship className="w-3 h-3 text-white" />
-                  <span className="text-[10px] text-white font-[family-name:var(--font-mono)]">250m x 43m</span>
-                </div>
-                <button
-                  onClick={() => {
-                    setSelectedVesselId(null);
-                    setSidebarOpen(true);
-                  }}
-                  className="p-1 bg-[#10141C]/60 backdrop-blur-sm border border-[#2A3441] rounded hover:bg-black/80 transition-colors"
-                >
-                  <X className="w-3 h-3 text-white" />
-                </button>
-              </div>
-            </div>
-
-            {/* Bottom Photo Info */}
-            <div className="absolute bottom-2 left-3 right-3 flex justify-between text-[10px] font-bold font-[family-name:var(--font-mono)] text-[#D1D5DB] drop-shadow-md">
-              <div className="flex flex-col items-center">
-                <span className="text-white/60 text-[8px] uppercase tracking-wider mb-0.5">IMO</span>
-                <span>{selectedVessel.imo || "9581681"}</span>
-              </div>
-              <div className="flex flex-col items-center">
-                <span className="text-white/60 text-[8px] uppercase tracking-wider mb-0.5">MMSI</span>
-                <span>{selectedVessel.mmsi || "636021643"}</span>
-              </div>
-              <div className="flex flex-col items-center">
-                <span className="text-white/60 text-[8px] uppercase tracking-wider mb-0.5">Callsign</span>
-                <span>5L F77</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex-1 overflow-y-auto min-h-0 flex flex-col bg-[#131820]">
-            {/* Title Block */}
-            <div className="px-4 py-3 border-b border-[#2A3441] flex flex-col gap-2">
-               <div className="flex items-center justify-between">
-                 <div className="flex items-center gap-2">
-                   <span className="text-lg leading-none">{selectedVessel.flag}</span>
-                   <span className="text-[13px] font-bold text-white uppercase tracking-widest font-[family-name:var(--font-display)]">
-                     {selectedVessel.name || "MARINE BRIGHT"}
-                   </span>
-                 </div>
-                 <Link href={`/vessel/${selectedVessel.id}`} className="px-2.5 py-1 bg-[#0EA5E9] hover:bg-[#0284C7] text-white text-[10px] font-bold rounded flex items-center gap-1 transition-colors">
-                   Detail <ChevronRight className="w-3 h-3" />
-                 </Link>
-               </div>
-               
-               <div className="flex items-center gap-2 mt-1">
-                 <MapPin className="w-3.5 h-3.5 text-[#D1D5DB]" />
-                 <span className="text-[11px] text-[#D1D5DB] font-[family-name:var(--font-mono)]">
-                   6°57'39.41"S 124°27'6.16"E
-                 </span>
-               </div>
-               
-               <div className="flex items-center gap-2 px-3 py-1.5 mt-2 bg-[#EAB308]/10 border-l-2 border-[#EAB308] rounded-r">
-                 <Navigation className="w-3.5 h-3.5 text-[#EAB308]" />
-                 <span className="text-[11px] text-[#EAB308] font-bold italic font-[family-name:var(--font-display)]">
-                   {selectedVessel.status === "Underway" ? "Under Way Using Engine" : selectedVessel.status}
-                 </span>
-               </div>
-            </div>
-
-            {/* Route Timeline */}
-            <div className="px-4 py-4 border-b border-[#2A3441] flex flex-col gap-4 relative">
-              <div className="absolute left-[27px] top-8 bottom-8 w-px border-l-2 border-dashed border-[#2A3441]" />
-              
-              {(() => {
-                 try {
-                   const logs = JSON.parse(selectedVessel.historyLog || "[]");
-                   if (logs.length === 0) return <div className="text-[10px] text-[#6B7280]">No tracking history available.</div>;
-                   return logs.map((log: any, idx: number) => (
-                      <div key={idx} className="flex items-start gap-4 mb-2 last:mb-0">
-                        <div className={`w-6 h-6 rounded bg-[#10141C] border ${idx===0 ? "border-[#6B7280]" : "border-[#0EA5E9]"} flex flex-col items-center justify-center shrink-0 z-10 shadow-lg`}>
-                          {log.status === 'MOORED' || log.status === 'DEPARTED' ? <Anchor className={`w-3 h-3 ${idx===0 ? "text-[#6B7280]" : "text-[#0EA5E9]"}`} /> : <Ship className={`w-3 h-3 ${idx===0 ? "text-[#6B7280]" : "text-[#0EA5E9]"}`} />}
-                        </div>
-                        <div>
-                          <div className={`text-[10px] font-bold ${idx===0 ? "text-[#6B7280]" : "text-white"} uppercase font-[family-name:var(--font-display)]`}>{log.status}</div>
-                          <div className={`text-[11px] ${idx===0 ? "text-[#4A5568]" : "text-white"} mt-0.5 font-[family-name:var(--font-display)] tracking-wider`}>{log.location}</div>
-                          <div className="text-[9px] text-[#6B7280] font-[family-name:var(--font-mono)] mt-0.5">{log.timestamp}</div>
-                        </div>
-                      </div>
-                   ));
-                 } catch(e) {
-                   return <div className="text-[10px] text-[#6B7280]">Loading log...</div>;
-                 }
-              })()}
-            </div>
-
-            {/* Vessel Metadata Table */}
-            <div className="px-4 py-3 flex-1 flex flex-col gap-2">
-              {[
-                { label: "Speed", value: `${selectedVessel.speed} kn` },
-                { label: "Heading", value: `${selectedVessel.heading}°` },
-                { label: "Draught", value: "8 m" },
-                { label: "Flag", value: selectedVessel.flag },
-                { label: "Ship Type", value: selectedVessel.type },
-                { label: "Class", value: "A" },
-                { label: "AIS Source", value: "S AIS" },
-                { label: "Signal Qlty", value: selectedVessel.signalQuality || "98.5%" },
-                { label: "Tracking UTC", value: selectedVessel.lastUpdateUtc || "2026-04-09 03:00:00 UTC" },
-                { label: "Relative", value: selectedVessel.lastUpdate },
-              ].map((row, i) => (
-                <div key={i} className="flex grid grid-cols-[110px_1fr] items-center text-[10px]">
-                  <span className="font-bold text-[#D1D5DB] font-[family-name:var(--font-display)] text-shadow-sm">{row.label}</span>
-                  <span className="text-white font-[family-name:var(--font-mono)]">{row.value}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Fixed Footer Actions */}
-          <div className="h-10 bg-[#0EA5E9] shrink-0 grid grid-cols-4 px-2 shadow-[0_-4px_10px_rgba(14,165,233,0.3)]">
-            {[
-              { icon: Route, label: "+Play Trail" },
-              { icon: Anchor, label: "Portcall" },
-              { icon: Target, label: "Center" },
-              { icon: MoreHorizontal, label: "More" },
-            ].map((btn, i) => (
-              <button 
-                key={i} 
-                onClick={() => {
-                  if (btn.label === "Center") {
-                    setCenterTrigger(Date.now());
-                  }
-                }}
-                className="flex flex-col items-center justify-center hover:bg-[#0284C7] transition-colors rounded-sm Group pt-0.5"
-              >
-                <btn.icon className="w-3.5 h-3.5 text-white mb-0.5" />
-                <span className="text-[7.5px] font-bold text-white capitalize tracking-wider font-[family-name:var(--font-display)]">{btn.label}</span>
-              </button>
-            ))}
-          </div>
-        </aside>
-      )}
       </div>
-
       {/* === BOTTOM STATUS BAR === */}
       <div className="h-7 bg-[#131820]/95 backdrop-blur-sm border-t border-[#2A3441] flex items-center justify-between px-4 z-10 shrink-0 relative">
         <div className="flex items-center gap-4">

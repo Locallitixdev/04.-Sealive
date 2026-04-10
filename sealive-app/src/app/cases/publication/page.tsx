@@ -5,29 +5,29 @@ import { Search, Calendar, Flag, Hash, ChevronDown, MoreHorizontal } from "lucid
 
 // Mock data array mimicking the image exactly
 const MOCK_PUBLICATIONS = [
-  { id: 23689, title: "Bea Cukai Periksa 82 Yacht di Ancol, Tegakkan Keadilan Fiskal", date: "18/04/2026", type: "Other", tags: ["#Kapal", "#Petugas", "#Beacukai", "#Dermaga Batavia..."], img: "https://images.unsplash.com/photo-1569263979104-865ab7cd8d13?w=500&q=80" },
+  { id: 23689, title: "Bea Cukai Periksa 82 Yacht di Ancol, Tegakkan Keadilan Fiskal", date: "18/04/2026", type: "Other", tags: ["#Kapal", "#Yacht", "#Petugas", "#Beacukai", "#Dermaga Batavia..."], img: "https://images.unsplash.com/photo-1569263979104-865ab7cd8d13?w=500&q=80" },
   { id: 23679, title: "11 Nelayan KM Elnas III Ditemukan Selamat Setelah Dua Hari Terombang-ambing di Perairan Teluk Tomini", date: "03/04/2026", type: "Other", tags: ["#Nelayan", "#Evakuasi", "#Tim Sar", "#Perairan Teluk..."], img: "https://images.unsplash.com/photo-1544321798-251f15858cf8?w=500&q=80" },
   { id: 23696, title: "Polsek Pelabuhan Manado Gagalkan Penyelundupan 75 Liter Cap Tikus di Area Pelabuhan", date: "19/03/2026", type: "Contraband Smuggling", tags: ["#Kapal", "#Penyelundupan", "#Barang", "#Pelabuhan..."], img: "https://images.unsplash.com/photo-1517594422361-5e18a94a20e8?w=500&q=80" },
   { id: 23695, title: "Ditpolairud Malut Selidiki Dugaan Kapal Pengangkut Ore Nikel IWIP Tenggelam", date: "19/03/2026", type: "Maritime Accidents", tags: ["#Kapal", "#Tenggelam", "#Ditpolairud", "#Perairan Hal..."], img: "https://images.unsplash.com/photo-1534065672-887e5971bbbe?w=500&q=80" },
-  { id: 23694, title: "Bea Cukai Jakarta Periksa 82 Yacht di Ancol, Sasar Barang Mewah hingga Ekonomi Bawah Tanah", date: "18/03/2026", type: "Other", tags: ["#Kapal", "#Beacukai", "#Pajak", "#Dermaga Batavia..."], img: "https://images.unsplash.com/photo-1569263979104-865ab7cd8d13?w=500&q=80" },
-  { id: 23693, title: "Bea Cukai Jakarta Periksa 82 Yacht di Batavia Marina, Bidik Pelanggaran Pajak Barang Mewah", date: "18/03/2026", type: "Other", tags: ["#Kapal", "#Pajak", "#Beacukai", "#Dermaga Batavia..."], img: "https://images.unsplash.com/photo-1605281317010-fe5ffe798166?w=500&q=80" },
+  { id: 23694, title: "Bea Cukai Jakarta Periksa 82 Yacht di Ancol, Sasar Barang Mewah hingga Ekonomi Bawah Tanah", date: "18/03/2026", type: "Other", tags: ["#Kapal", "#Yacht", "#Beacukai", "#Pajak", "#Dermaga Batavia..."], img: "https://images.unsplash.com/photo-1569263979104-865ab7cd8d13?w=500&q=80" },
+  { id: 23693, title: "Bea Cukai Jakarta Periksa 82 Yacht di Batavia Marina, Bidik Pelanggaran Pajak Barang Mewah", date: "18/03/2026", type: "Other", tags: ["#Kapal", "#Yacht", "#Pajak", "#Beacukai", "#Dermaga Batavia..."], img: "https://images.unsplash.com/photo-1605281317010-fe5ffe798166?w=500&q=80" },
   
-  { id: 23692, title: "Bea Cukai Jakarta periksa izin dan kepabeanan 82 kapal pesiar", date: "18/03/2026", type: "Other", tags: ["#Kapal", "#Pajak", "#Beacukai", "#Dermaga Batavia..."], img: "https://images.unsplash.com/photo-1569263979104-865ab7cd8d13?w=500&q=80" },
-  { id: 23691, title: "Bea Cukai Jakarta Periksa 82 Yacht, Sasar Kepatuhan Pajak Barang Mewah", date: "18/03/2026", type: "Other", tags: ["#Kapal", "#Beacukai", "#Pajak", "#Dermaga Batavia..."], img: "https://images.unsplash.com/photo-1605281317010-fe5ffe798166?w=500&q=80" },
+  { id: 23692, title: "Bea Cukai Jakarta periksa izin dan kepabeanan 82 kapal pesiar", date: "18/03/2026", type: "Other", tags: ["#Kapal", "#Yacht", "#Pajak", "#Beacukai", "#Dermaga Batavia..."], img: "https://images.unsplash.com/photo-1569263979104-865ab7cd8d13?w=500&q=80" },
+  { id: 23691, title: "Bea Cukai Jakarta Periksa 82 Yacht, Sasar Kepatuhan Pajak Barang Mewah", date: "18/03/2026", type: "Other", tags: ["#Kapal", "#Yacht", "#Beacukai", "#Pajak", "#Dermaga Batavia..."], img: "https://images.unsplash.com/photo-1605281317010-fe5ffe798166?w=500&q=80" },
   { id: 23685, title: "11 ABK KM Elnas III yang Mati Mesin di Teluk Tomini Ditemukan Selamat", date: "18/03/2026", type: "Other", tags: ["#Nelayan", "#Evakuasi", "#Tim Sar", "#Perairan Teluk..."], img: "https://images.unsplash.com/photo-1544321798-251f15858cf8?w=500&q=80" },
-  { id: 23680, title: "Bea Cukai Jakarta Periksa Puluhan Yacht di Ancol Jakut", date: "18/03/2026", type: "Other", tags: ["#Kapal", "#Petugas", "#Beacukai", "#Dermaga Batavi..."], img: "https://images.unsplash.com/photo-1569263979104-865ab7cd8d13?w=500&q=80" },
+  { id: 23680, title: "Bea Cukai Jakarta Periksa Puluhan Yacht di Ancol Jakut", date: "18/03/2026", type: "Other", tags: ["#Kapal", "#Yacht", "#Petugas", "#Beacukai", "#Dermaga Batavi..."], img: "https://images.unsplash.com/photo-1569263979104-865ab7cd8d13?w=500&q=80" },
   { id: 23684, title: "Hilang Kontak Sejak 16 Maret, KM Elnas III Ditemukan Selamat di Teluk Tomini", date: "18/03/2026", type: "Other", tags: ["#Nelayan", "#Evakuasi", "#Tim Sar", "#Perairan Teluk..."], img: "https://images.unsplash.com/photo-1544321798-251f15858cf8?w=500&q=80" },
-  { id: 23683, title: "Mesin Kapal Mati, 11 Nelayan di Touna Terjebak di Tengah Laut", date: "18/03/2026", type: "Other", tags: ["#Nelayan", "#11 Abk Selamat", "#Tim Sar", "#Peraira..."], img: "https://images.unsplash.com/photo-1544321798-251f15858cf8?w=500&q=80" },
+  { id: 23683, title: "Mesin Kapal Mati, 11 Nelayan di Touna Terjebak di Tengah laut", date: "18/03/2026", type: "Other", tags: ["#Nelayan", "#11 Abk Selamat", "#Tim Sar", "#Peraira..."], img: "https://images.unsplash.com/photo-1544321798-251f15858cf8?w=500&q=80" },
 ];
 
 const TABS = [
   { name: "All Publication", count: null, active: true },
-  { name: "Maritime Accidents", count: 14369 },
-  { name: "Piracy", count: 4391 },
-  { name: "Contraband Smuggling", count: 3275 },
-  { name: "IUU Fishing", count: 553 },
-  { name: "Drugs Trafficking", count: 471 },
-  { name: "Armed Robbery", count: 84 },
+  { name: "Contraband Smuggling", count: 14369 },
+  { name: "Drugs Trafficking", count: 4391 },
+  { name: "Excise Violations", count: 3275 },
+  { name: "Illegal Export/Import", count: 553 },
+  { name: "Customs Fraud", count: 471 },
+  { name: "Illegal Transshipment", count: 84 },
 ];
 
 export default function PublicationPage() {

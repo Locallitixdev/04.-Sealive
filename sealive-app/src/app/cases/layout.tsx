@@ -16,7 +16,7 @@ export default function CasesLayout({ children }: { children: React.ReactNode })
   ];
 
   return (
-    <div className="flex h-[calc(100vh-56px)] overflow-hidden bg-[#0C0E14] text-white">
+    <div className="flex h-full overflow-hidden bg-[#0C0E14] text-white">
       {/* Sidebar */}
       <div className="w-[88px] shrink-0 bg-[#0C0E14] border-r border-[#2A3441] flex flex-col gap-4 py-6 items-center">
         {navs.map((n) => {

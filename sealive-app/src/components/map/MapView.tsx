@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useRef, useCallback, useState, useEffect, useMemo, Fragment } from "react";
-import Map, { Source, Layer, NavigationControl, ScaleControl } from "react-map-gl/maplibre";
+import Map, { Source, Layer, NavigationControl, ScaleControl, Popup } from "react-map-gl/maplibre";
+import { X } from "lucide-react";
 import type { MapRef, LayerProps } from "react-map-gl/maplibre";
 import type { FeatureCollection } from "geojson";
 import "maplibre-gl/dist/maplibre-gl.css";
@@ -145,7 +146,7 @@ export default function MapView({ onVesselSelect, selectedVesselId, layerVisibil
   const [cursor, setCursor] = useState("grab");
   const [mapLoaded, setMapLoaded] = useState(false);
   const [mapStyleLoaded, setMapStyleLoaded] = useState(false);
-  const [mapStyleId, setMapStyleId] = useState("dark");
+  const [mapStyleId, setMapStyleId] = useState("positron");
   
   const [animatedCoord, setAnimatedCoord] = useState<[number, number] | null>(null);
 
@@ -404,7 +405,7 @@ export default function MapView({ onVesselSelect, selectedVesselId, layerVisibil
       <ScaleControl position="bottom-right" unit="nautical" />
 
       {/* Vessel Data */}
-      {mapStyleLoaded && layers["vessels"] && (
+      {mapLoaded && mapStyleLoaded && layers["vessels"] && (
         <Source id="vessels" type="geojson" data={geojsonData}>
           {Object.entries(VESSEL_COLORS).filter(([k]) => k !== "default").map(([type, color]) => (
             <Layer
@@ -461,7 +462,7 @@ export default function MapView({ onVesselSelect, selectedVesselId, layerVisibil
       )}
 
       {/* Selected Vessel Active Track */}
-      {mapStyleLoaded && visibleVessels && visibleVessels.map(vId => {
+      {mapLoaded && mapStyleLoaded && visibleVessels && visibleVessels.map(vId => {
          const currentVessel = MOCK_VESSEL_GEOJSON.features.find(f => f.properties?.id === vId);
          if (!currentVessel || !currentVessel.properties?.track) return null;
          
@@ -546,7 +547,7 @@ export default function MapView({ onVesselSelect, selectedVesselId, layerVisibil
       })}
 
       {/* Shipping Routes */}
-      {mapStyleLoaded && layers["shipping-routes"] && (
+      {mapLoaded && mapStyleLoaded && layers["shipping-routes"] && (
         <Source id="shipping-routes" type="geojson" data={SHIPPING_ROUTES}>
           <Layer
             id="shipping-routes-line"
@@ -562,7 +563,7 @@ export default function MapView({ onVesselSelect, selectedVesselId, layerVisibil
       )}
 
       {/* EEZ Zones */}
-      {mapStyleLoaded && layers["eez"] && (
+      {mapLoaded && mapStyleLoaded && layers["eez"] && (
         <Source id="eez" type="geojson" data="/data/eez_indonesia.geojson">
           <Layer
             id="eez-fill"
@@ -586,7 +587,7 @@ export default function MapView({ onVesselSelect, selectedVesselId, layerVisibil
       )}
 
       {/* Ports */}
-      {mapStyleLoaded && layers["ports"] && (
+      {mapLoaded && mapStyleLoaded && layers["ports"] && (
         <Source id="ports" type="geojson" data={PORTS}>
           <Layer
             id="ports-circle"
@@ -624,7 +625,7 @@ export default function MapView({ onVesselSelect, selectedVesselId, layerVisibil
       )}
 
       {/* Anomaly Zones */}
-      {mapStyleLoaded && layers["anomaly-zones"] && (
+      {mapLoaded && mapStyleLoaded && layers["anomaly-zones"] && (
         <Source id="anomaly-zones" type="geojson" data={ANOMALY_ZONES}>
           <Layer
             id="anomaly-zone-circle"
@@ -680,6 +681,131 @@ export default function MapView({ onVesselSelect, selectedVesselId, layerVisibil
           />
         </Source>
       )}
+
+      {/* Vessel Detail Popup */}
+      {selectedVesselId && (() => {
+        const vFeature = MOCK_VESSEL_GEOJSON.features.find(f => f.properties?.id === selectedVesselId);
+        if (!vFeature || vFeature.geometry.type !== "Point") return null;
+        const v = vFeature.properties as unknown as VesselProperties;
+        const lon = playbackState && playbackState.vesselId === selectedVesselId && animatedCoord ? animatedCoord[0] : vFeature.geometry.coordinates[0];
+        const lat = playbackState && playbackState.vesselId === selectedVesselId && animatedCoord ? animatedCoord[1] : vFeature.geometry.coordinates[1];
+        
+        return (
+          <Popup
+            longitude={lon}
+            latitude={lat}
+            closeButton={false}
+            closeOnClick={false}
+            anchor="bottom"
+            offset={20}
+            className="vessel-popup"
+            style={{ zIndex: 50, maxWidth: "none" }}
+          >
+            <div className="bg-white rounded-lg shadow-2xl w-[280px] overflow-hidden flex flex-col font-sans border border-gray-200" style={{ transform: "translateY(-10px)" }}>
+              {/* Header */}
+              <div className="flex items-start justify-between p-2 pb-1 bg-white">
+                <div className="flex gap-2">
+                  <div className="flex items-center justify-center p-1 bg-[#1976D2] rounded shrink-0">
+                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                  </div>
+                  <div className="flex flex-col">
+                     <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] font-bold border border-gray-300 rounded-[2px] px-1 leading-[1.2] text-gray-700 bg-gray-50">{v.flag}</span>
+                        <span className="text-[13px] font-bold text-gray-900 leading-[1.1] uppercase">{v.name}</span>
+                     </div>
+                     <span className="text-[10px] text-gray-500 font-medium leading-none mt-0.5">{v.type}</span>
+                  </div>
+                </div>
+                <div className="flex gap-1 pt-0.5">
+                   <button className="text-gray-400 hover:text-gray-700 transition-colors">
+                     <svg className="w-5 h-5 mb-1" fill="currentColor" viewBox="0 0 24 24"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/></svg>
+                   </button>
+                   <button onClick={() => onVesselSelect?.(null)} className="text-gray-400 hover:text-gray-700 transition-colors"><X className="w-5 h-5"/></button>
+                </div>
+              </div>
+
+              {/* Image */}
+              <div className="h-[130px] relative w-full overflow-hidden bg-gray-100">
+                <img src="https://images.unsplash.com/photo-1572097561858-a5b591b65e9f?q=80&w=600&auto=format&fit=crop" className="w-full h-full object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                <div className="absolute top-2 left-2 flex items-center justify-center p-1 bg-white/20 backdrop-blur-sm rounded opacity-80">
+                   <svg width="12" height="12" viewBox="0 0 24 24" fill="white"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="p-2.5 flex gap-2">
+                <button className="px-2 py-1.5 border border-gray-300 rounded text-gray-600 hover:bg-gray-50 flex items-center justify-center">
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+                </button>
+                <button className="flex-1 py-1.5 border border-[#1976D2] rounded text-[11px] font-bold text-[#1976D2] bg-white hover:bg-[#1976D2]/5 transition-colors uppercase tracking-wide">Add to fleet</button>
+                <a href={`/vessel/${selectedVesselId}`} className="flex-1 flex items-center justify-center py-1.5 rounded text-[11px] font-bold text-white bg-[#1976D2] hover:bg-[#1565C0] transition-colors shadow-sm uppercase tracking-wide">Vessel details</a>
+              </div>
+
+              {/* ID + ETA */}
+              <div className="px-3 pb-2 pt-1 border-b border-gray-100">
+                <div className="flex justify-between items-baseline mb-2">
+                    <div className="flex gap-1.5 items-baseline">
+                      <span className="text-[10px] text-gray-500 font-bold">ID</span>
+                      <span className="text-xl text-gray-900 tracking-wide font-black">{v.flag === "ID" ? "BXT" : "SGP"}</span>
+                    </div>
+                    <span className="text-[11px] text-gray-600 font-bold uppercase tracking-wider">{v.destination || "WEST SENO FIELD"}</span>
+                </div>
+                
+                <div className="flex justify-between items-center bg-gray-50/80 border border-gray-100 p-2.5 rounded relative mb-3">
+                    <div className="flex flex-col">
+                       <span className="text-[9px] text-gray-500 font-bold uppercase">ATD:</span>
+                       <span className="text-[10px] text-gray-900 font-bold">{v.lastUpdateUtc || "2025-06-03 17:53"}</span>
+                    </div>
+                    <div className="flex flex-col items-end mr-6">
+                      <span className="text-[9px] text-gray-500 font-bold uppercase">Reported ETA:</span>
+                      <span className="text-[10px] text-gray-900 font-bold">{v.eta || "2026-09-09 09:00"}</span>
+                    </div>
+                    <button className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 bg-white rounded-full w-[18px] h-[18px] flex items-center justify-center font-bold border border-gray-200 shadow-sm text-[10px] italic hover:bg-gray-100">i</button>
+                </div>
+
+                {/* Progress line */}
+                <div className="py-2 mb-3 relative flex items-center px-1">
+                    <div className="absolute left-1 right-1 h-[2px] bg-gray-200 rounded-full" />
+                    <div className="absolute left-1 w-[45%] h-[2px] bg-[#2E7D32] rounded-l-full" />
+                    <div className="absolute left-0 w-2.5 h-2.5 bg-[#2E7D32] border-[1.5px] border-white rounded-full shadow-sm z-10" />
+                    <svg className="absolute left-[45%] -translate-x-[40%] text-[#2E7D32] w-3 h-3 z-10 fill-current drop-shadow-sm" viewBox="0 0 24 24"><path d="M3 12l18-12-7 12 7 12z"/></svg>
+                    <div className="absolute right-0 w-2 h-2 bg-gray-400 rounded-full border border-white z-10 shadow-sm" />
+                </div>
+
+                {/* Tracks & routes */}
+                <div className="flex gap-2 items-center">
+                    <button className="flex-1 py-1.5 rounded-[4px] text-[10px] font-bold text-white bg-[#1E293B] flex items-center justify-center gap-1.5 hover:bg-gray-800 transition-colors"><svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 3L14.5 21a2 2 0 0 1-3.6 0L8 14 2 13a2 2 0 0 1 0-3.6L21 3z"/></svg> Past track</button>
+                    <button className="flex-1 py-1.5 border border-gray-300 rounded-[4px] text-[10px] font-bold text-gray-700 hover:bg-gray-50 bg-white transition-colors">Use route tool</button>
+                    <button className="text-gray-500 bg-white rounded-full w-5 h-5 flex items-center justify-center font-bold border border-gray-200 shadow-sm text-[10px] italic hover:bg-gray-100 shrink-0 transition-colors">i</button>
+                </div>
+              </div>
+
+              {/* Table bottom */}
+              <div className="grid grid-cols-[1fr_85px_60px] divide-x divide-gray-200 bg-gray-50 border-b border-gray-200">
+                <div className="px-3 py-2 flex flex-col justify-center bg-white">
+                  <span className="text-[9px] text-gray-500 uppercase font-bold tracking-wider mb-0.5">Navigational status</span>
+                  <span className="text-[10px] text-gray-900 font-bold">{v.status === 'Underway' ? 'Under Way Using Engine' : v.status}</span>
+                </div>
+                <div className="px-2 py-2 flex flex-col justify-center bg-white items-center">
+                  <span className="text-[9px] text-gray-500 uppercase font-bold tracking-wider mb-0.5">Speed/Course</span>
+                  <span className="text-[10px] text-gray-900 font-bold">{v.speed}kn / {Math.round(v.heading)}°</span>
+                </div>
+                <div className="px-2 py-2 flex flex-col justify-center bg-white items-center">
+                  <span className="text-[9px] text-gray-500 uppercase font-bold tracking-wider mb-0.5">Draught</span>
+                  <span className="text-[10px] text-gray-900 font-bold">2.8m</span>
+                </div>
+              </div>
+              
+              <div className="px-3 py-2.5 bg-gray-50 border-t border-white">
+                  <p className="text-[9px] text-gray-500 leading-tight">
+                    Received: <span className="font-bold text-gray-800">{v.lastUpdate}</span> (AIS source: <span className="underline decoration-dotted text-gray-700">Roaming</span>) <button className="inline-flex items-center justify-center w-[14px] h-[14px] rounded-full border border-gray-300 text-[8px] italic ml-0.5 bg-white">i</button>
+                  </p>
+              </div>
+            </div>
+          </Popup>
+        );
+      })()}
 
       {/* Map Control Toolbar */}
       <MapControlsToolbar 
