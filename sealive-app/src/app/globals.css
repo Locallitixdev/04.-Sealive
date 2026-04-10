@@ -1,0 +1,529 @@
+@import "tailwindcss";
+
+/* ========================================
+   SEALIVE — Design System
+   Theme: Tactical Military Command
+   Phase 0G: Polish & Micro-interactions
+   ======================================== */
+
+@theme inline {
+  /* --- Background Colors - Gunmetal/Olive palette --- */
+  --color-bg-primary: #0C0E14;
+  --color-bg-secondary: #131820;
+  --color-bg-tertiary: #1A1E28;
+  --color-bg-surface: #0F1219;
+  --color-bg-hover: #222833;
+  --color-bg-overlay: rgba(12, 14, 20, 0.9);
+
+  /* --- Border Colors - Sharp, high contrast --- */
+  --color-border-default: #2A3441;
+  --color-border-subtle: #1E252F;
+  --color-border-active: #4A5568;
+  --color-border-accent: #E67E22;
+
+  /* --- Text Colors - Cool gray with slight blue tint --- */
+  --color-text-primary: #D1D5DB;
+  --color-text-secondary: #9CA3AF;
+  --color-text-muted: #6B7280;
+  --color-text-inverse: #0C0E14;
+  --color-text-accent: #E67E22;
+
+  /* --- Accent Colors - Tactical/Orange/Military --- */
+  --color-accent-orange: #E67E22;
+  --color-accent-tactical: #D97706;
+  --color-accent-blue: #3B82F6;
+  --color-accent-red: #DC2626;
+  --color-accent-green: #059669;
+  --color-accent-cyan: #06B6D4;
+
+  /* --- Glows --- */
+  --color-glow-orange: rgba(230, 126, 34, 0.2);
+  --color-glow-red: rgba(220, 38, 38, 0.2);
+  --color-glow-green: rgba(5, 150, 105, 0.2);
+
+  /* --- Font --- */
+  --font-display: var(--font-chakra), "Chakra Petch", ui-sans-serif, system-ui, sans-serif;
+  --font-body: var(--font-inter), "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-mono), "JetBrains Mono", ui-monospace, monospace;
+
+  /* --- Spacing constants --- */
+  --spacing-navbar: 56px;
+  --spacing-sidebar: 320px;
+
+  /* --- Animations --- */
+  --animate-pulse-slow: pulse-slow 3s ease-in-out infinite;
+  --animate-fade-in: fade-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-slide-in-left: slide-in-left 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-slide-up: slide-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-scan-line: scan-line 4s linear infinite;
+  --animate-blink: blink 1s step-end infinite;
+  --animate-shimmer: shimmer 2s linear infinite;
+  --animate-radar-sweep: radar-sweep 4s linear infinite;
+  --animate-glow-pulse: glow-pulse 2s ease-in-out infinite;
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-bar-grow: bar-grow 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-spin-slow: spin-slow 20s linear infinite;
+  --animate-fade-in-scale: fade-in-scale 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* --- Keyframes --- */
+@keyframes pulse-slow {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fade-in-scale {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes slide-in-left {
+  from { opacity: 0; transform: translateX(-20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scan-line {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100%); }
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes radar-sweep {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 8px rgba(230, 126, 34, 0.1); }
+  50% { box-shadow: 0 0 20px rgba(230, 126, 34, 0.3); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-6px); }
+}
+
+@keyframes bar-grow {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes dot-pulse {
+  0%, 100% { opacity: 0.4; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1.2); }
+}
+
+@keyframes row-slide-in {
+  from { opacity: 0; transform: translateX(-10px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes count-up-flash {
+  0% { opacity: 0; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1.05); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes seismo {
+  to { stroke-dashoffset: 0; }
+}
+
+/* --- Base Styles --- */
+html {
+  color-scheme: dark;
+}
+
+body {
+  background-color: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  font-family: var(--font-body);
+  font-size: 13px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* --- Custom Scrollbar - Thin, functional --- */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-bg-primary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border-default);
+  border-radius: 2px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-muted);
+}
+
+/* Firefox scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border-default) var(--color-bg-primary);
+}
+
+/* --- Selection --- */
+::selection {
+  background-color: rgba(230, 126, 34, 0.3);
+  color: var(--color-text-primary);
+}
+
+/* --- Focus Ring --- */
+*:focus-visible {
+  outline: 2px solid var(--color-accent-orange);
+  outline-offset: 1px;
+}
+
+/* ========================================
+   UTILITY CLASSES
+   ======================================== */
+
+/* --- Tactical Box Styles --- */
+.tactical-box {
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border-default);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+}
+
+.tactical-inset {
+  background: var(--color-bg-primary);
+  border: 1px solid var(--color-border-subtle);
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+}
+
+.accent-glow {
+  box-shadow: 0 0 12px var(--color-glow-orange);
+}
+
+/* --- Scan Line Effect --- */
+.scan-line {
+  position: relative;
+  overflow: hidden;
+}
+.scan-line::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--color-accent-orange), transparent);
+  animation: scan-line 4s linear infinite;
+}
+
+/* --- Live Indicator --- */
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-accent-green);
+  box-shadow: 0 0 6px var(--color-accent-green);
+}
+.status-dot.blink {
+  animation: blink 1s step-end infinite;
+}
+
+/* --- Grid Pattern Background --- */
+.grid-pattern {
+  background-image: 
+    linear-gradient(rgba(230, 126, 34, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(230, 126, 34, 0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* --- Rounded variants --- */
+.rounded-sm { border-radius: 4px; }
+.rounded-md { border-radius: 8px; }
+.rounded-lg { border-radius: 10px; }
+.rounded-xl { border-radius: 14px; }
+
+/* ========================================
+   MICRO-INTERACTION CLASSES (Phase 0G)
+   ======================================== */
+
+/* --- Hover Lift Effect --- */
+.hover-lift {
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.2s ease;
+}
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), 0 0 12px rgba(230, 126, 34, 0.08);
+}
+
+/* --- Hover Border Glow --- */
+.hover-glow {
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+.hover-glow:hover {
+  border-color: rgba(230, 126, 34, 0.4);
+  box-shadow: 0 0 16px rgba(230, 126, 34, 0.1);
+}
+
+/* --- Button Press Effect --- */
+.btn-press {
+  transition: transform 0.1s ease, background-color 0.15s ease;
+}
+.btn-press:active {
+  transform: scale(0.96);
+}
+
+/* --- Skeleton Loading --- */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--color-bg-tertiary) 0%,
+    rgba(42, 52, 65, 0.6) 50%,
+    var(--color-bg-tertiary) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s linear infinite;
+  border-radius: 4px;
+}
+
+/* --- Stagger Animation (use CSS custom property --i for delay) --- */
+.stagger-in {
+  animation: fade-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: calc(var(--i, 0) * 60ms);
+}
+
+.stagger-slide-up {
+  animation: slide-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: calc(var(--i, 0) * 80ms);
+}
+
+/* --- Row entrance --- */
+.row-enter {
+  animation: row-slide-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: calc(var(--i, 0) * 40ms);
+}
+
+/* --- Bar chart grow (origin left) --- */
+.bar-grow {
+  transform-origin: left;
+  animation: bar-grow 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: calc(var(--i, 0) * 80ms);
+}
+
+/* --- Count flash --- */
+.count-flash {
+  animation: count-up-flash 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: calc(var(--i, 0) * 100ms);
+}
+
+/* --- Radar Sweep Visual --- */
+.radar-sweep {
+  position: relative;
+}
+.radar-sweep::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 50%;
+  height: 50%;
+  transform-origin: bottom left;
+  background: linear-gradient(transparent, rgba(230, 126, 34, 0.08));
+  animation: radar-sweep 4s linear infinite;
+  border-radius: 100% 0 0 0;
+  pointer-events: none;
+}
+
+/* --- Dot Pulse (for anomaly markers) --- */
+.dot-pulse {
+  animation: dot-pulse 2s ease-in-out infinite;
+  animation-delay: calc(var(--i, 0) * 300ms);
+}
+
+/* --- Page Transition Wrapper --- */
+.page-enter {
+  animation: fade-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* --- Sidebar Slide --- */
+.sidebar-slide {
+  transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              min-width 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              opacity 0.2s ease;
+}
+
+/* --- Active Nav Indicator --- */
+.nav-active-indicator {
+  position: relative;
+}
+.nav-active-indicator::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 50%;
+  width: 0;
+  height: 2px;
+  background: var(--color-accent-orange);
+  transition: width 0.2s ease, left 0.2s ease;
+  border-radius: 1px;
+}
+.nav-active-indicator.active::after {
+  width: 60%;
+  left: 20%;
+}
+
+/* --- Tooltip hint (simple) --- */
+.tooltip-hint {
+  position: relative;
+}
+.tooltip-hint::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%) translateY(4px);
+  padding: 3px 8px;
+  background: var(--color-bg-tertiary);
+  border: 1px solid var(--color-border-default);
+  color: var(--color-text-secondary);
+  font-size: 9px;
+  font-family: var(--font-mono);
+  white-space: nowrap;
+  border-radius: 4px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  z-index: 100;
+}
+.tooltip-hint:hover::after {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* --- Number highlight on hover --- */
+.num-highlight {
+  transition: color 0.15s ease, text-shadow 0.15s ease;
+}
+.num-highlight:hover {
+  color: var(--color-accent-orange);
+  text-shadow: 0 0 8px rgba(230, 126, 34, 0.4);
+}
+
+/* ========================================
+   MAPLIBRE GL CSS OVERRIDES
+   ======================================== */
+
+/* Remove default popup styling */
+.maplibregl-popup-content {
+  background: transparent !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+  border-radius: 10px !important;
+}
+
+.maplibregl-popup-close-button {
+  color: #6B7280 !important;
+  font-size: 16px !important;
+  right: 4px !important;
+  top: 4px !important;
+  z-index: 10 !important;
+}
+
+.maplibregl-popup-close-button:hover {
+  color: #E67E22 !important;
+  background: transparent !important;
+}
+
+.maplibregl-popup-anchor-bottom .maplibregl-popup-tip {
+  border-top-color: #131820 !important;
+}
+
+.maplibregl-popup-anchor-top .maplibregl-popup-tip {
+  border-bottom-color: #131820 !important;
+}
+
+.maplibregl-popup-anchor-left .maplibregl-popup-tip {
+  border-right-color: #131820 !important;
+}
+
+.maplibregl-popup-anchor-right .maplibregl-popup-tip {
+  border-left-color: #131820 !important;
+}
+
+/* Navigation controls - tactical dark */
+.maplibregl-ctrl-group {
+  background: #131820 !important;
+  border: 1px solid #2A3441 !important;
+  border-radius: 10px !important;
+  overflow: hidden;
+}
+
+.maplibregl-ctrl-group button {
+  background: transparent !important;
+  border-color: #2A3441 !important;
+}
+
+.maplibregl-ctrl-group button:hover {
+  background: #1A1E28 !important;
+}
+
+.maplibregl-ctrl-group button + button {
+  border-top-color: #2A3441 !important;
+}
+
+.maplibregl-ctrl button .maplibregl-ctrl-icon {
+  filter: invert(0.6);
+}
+
+.maplibregl-ctrl-group button:hover .maplibregl-ctrl-icon {
+  filter: invert(0.8);
+}
+
+/* Scale control */
+.maplibregl-ctrl-scale {
+  background: #131820 !important;
+  border-color: #6B7280 !important;
+  color: #6B7280 !important;
+  font-size: 9px !important;
+  font-family: var(--font-mono) !important;
+  border-radius: 4px !important;
+  padding: 1px 6px !important;
+}
+
+/* Attribution */
+.maplibregl-ctrl-attrib {
+  background: rgba(12, 14, 20, 0.8) !important;
+  color: #4A5568 !important;
+  font-size: 8px !important;
+}
+
+.maplibregl-ctrl-attrib a {
+  color: #6B7280 !important;
+}
+

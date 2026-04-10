@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: sealive-postgres
+    ports: ["5434:5432"]
+    environment:
+      POSTGRES_DB: sealive_db
+      POSTGRES_USER: sealive
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-sealive_dev}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sealive"]
+      interval: 5s
+      retries: 5
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: sealive-redis
+    ports: ["6379:6379"]
+    command: redis-server --requirepass ${REDIS_PASSWORD:-redis_dev}
+    volumes:
+      - redisdata:/data
+    restart: unless-stopped
+
+  minio:
+    image: minio/minio:latest
+    container_name: sealive-minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:-minioadmin}
+    command: server /data --console-address ":9001"
+    volumes:
+      - miniodata:/data
+    restart: unless-stopped
+
+  sealive-web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: sealive-web
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+
+volumes:
+  pgdata:
+  redisdata:
+  miniodata:
