@@ -411,11 +411,11 @@ export default function MapView({ onVesselSelect, selectedVesselId, layerVisibil
               key={type}
               id={`vessels-marker-${type.replace(/[^a-zA-Z0-9]/g, '-')}`}
               type="symbol"
-              filter={
+              filter={(
                 visibleVessels
                   ? ["all", ["==", ["get", "type"], type], ["any", ...visibleVessels.map(vId => ["==", ["get", "id"], vId])]]
                   : ["==", ["get", "type"], type]
-              }
+              ) as any}
               layout={{
                 "icon-image": [
                   "match", ["get", "source"],
@@ -447,12 +447,14 @@ export default function MapView({ onVesselSelect, selectedVesselId, layerVisibil
           ))}
           {layers["vessel-labels"] && (
             <Layer 
-              {...vesselLabelLayer} 
-              filter={
-                visibleVessels 
-                  ? ["any", ...visibleVessels.map(vId => ["==", ["get", "id"], vId])]
-                  : ["has", "name"]
-              } 
+              {...{
+                ...vesselLabelLayer,
+                filter: (
+                  visibleVessels 
+                    ? ["any", ...visibleVessels.map(vId => ["==", ["get", "id"], vId])]
+                    : ["has", "name"]
+                ),
+              } as LayerProps}
             />
           )}
         </Source>
@@ -460,13 +462,13 @@ export default function MapView({ onVesselSelect, selectedVesselId, layerVisibil
 
       {/* Selected Vessel Active Track */}
       {mapStyleLoaded && visibleVessels && visibleVessels.map(vId => {
-         const currentVessel = MOCK_VESSEL_GEOJSON.features.find(f => f.properties.id === vId);
-         if (!currentVessel || !currentVessel.properties.track) return null;
+         const currentVessel = MOCK_VESSEL_GEOJSON.features.find(f => f.properties?.id === vId);
+         if (!currentVessel || !currentVessel.properties?.track) return null;
          
          const isPrimary = vId === selectedVesselId;
-         const vesselColor = VESSEL_COLORS[currentVessel.properties.type] || VESSEL_COLORS.default;
+         const vesselColor = VESSEL_COLORS[currentVessel.properties!.type] || VESSEL_COLORS.default;
          
-         const trk = (isPrimary && playbackTrack ? playbackTrack : currentVessel.properties.track as any[]) || [];
+         const trk = (isPrimary && playbackTrack ? playbackTrack : currentVessel.properties!.track as any[]) || [];
          const lineCoords = trk.map(t => t.coord || t);
          
          if (isPrimary && playbackState && animatedCoord) {
